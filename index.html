@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Chem Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/portal.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230fa3b1' d='M10 2v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 8.5V2z'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="site-title-block">
+      <h1 class="site-title" id="siteTitle">Chem Portal</h1>
+      <p class="site-subtitle" id="siteSubtitle">化学 授業ポータル</p>
+    </div>
+    <div class="flask" aria-hidden="true">
+      <svg viewBox="0 0 92 96" fill="none">
+        <!-- 三角フラスコ -->
+        <path d="M38 8h16M40 10v22L62 74a8 8 0 0 1-7 12H37a8 8 0 0 1-7-12l22-42" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M40 10v22L18 74a8 8 0 0 0 7 12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- 中の液体 -->
+        <path d="M31 56 49 56 61 79a5 5 0 0 1-4.4 7H25.4A5 5 0 0 1 21 79z" fill="rgba(255,224,102,0.9)"/>
+      </svg>
+      <span class="bubble b1"></span>
+      <span class="bubble b2"></span>
+      <span class="bubble b3"></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="loading"><div class="spin"></div>読み込み中…</div>
+</main>
+
+<footer class="site-footer">Chem Portal</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/portal.js"></script>
+</body>
+</html>

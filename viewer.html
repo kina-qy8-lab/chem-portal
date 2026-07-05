@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>教材ビューア</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0e2f3a; }
+  iframe { display: block; width: 100%; height: 100%; border: none; background: #fff; }
+  .close-btn {
+    position: fixed; top: 10px; right: 10px; z-index: 10;
+    background: rgba(14, 47, 58, 0.85); color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 999px;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: sans-serif;
+  }
+  .msg {
+    color: #fff; font-family: sans-serif; text-align: center;
+    padding-top: 40vh; font-size: 15px;
+  }
+</style>
+</head>
+<body>
+<button class="close-btn" onclick="if (history.length > 1) history.back(); else window.close();">✕ とじる</button>
+<div class="msg" id="msg">読み込み中…</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  const title = params.get("title");
+  if (title) document.title = title;
+  const msg = document.getElementById("msg");
+  if (!id) { msg.textContent = "教材が指定されていません。"; return; }
+  try {
+    const res = await Api.get({ action: "html", id: id });
+    if (!res.ok) throw new Error(res.error);
+    const f = document.createElement("iframe");
+    f.setAttribute("sandbox",
+      "allow-scripts allow-popups allow-modals allow-forms allow-pointer-lock allow-downloads" +
+      (CONFIG.ALLOW_APP_STORAGE ? " allow-same-origin" : ""));
+    f.setAttribute("allow", "fullscreen");
+    f.srcdoc = res.html;
+    msg.remove();
+    document.body.appendChild(f);
+  } catch (e) {
+    msg.textContent = "教材を読み込めませんでした。通信環境を確認してください。";
+  }
+})();
+</script>
+</body>
+</html>
