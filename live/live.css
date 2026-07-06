@@ -1,0 +1,203 @@
+/* =========================================================
+   live/live.css — ライブ授業 追加スタイル (portal.css と併用)
+   ========================================================= */
+
+/* ---------- 参加コード表示 ---------- */
+.join-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: linear-gradient(120deg, #0d7f8b, #27bfae);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin: 14px 0;
+  box-shadow: var(--shadow);
+}
+.join-code {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(40px, 8vw, 72px);
+  letter-spacing: 0.28em;
+  line-height: 1.1;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+.join-banner .sub { font-size: 13px; opacity: 0.92; }
+.join-banner .qr img { border: 6px solid #fff; border-radius: 8px; display: block; }
+
+/* ---------- ステータスピル ---------- */
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.pill {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.pill.hot { background: var(--k-pale); border-color: var(--k); color: var(--k-deep); }
+.pill.ok  { background: var(--ba-pale); border-color: var(--ba); color: var(--ba-deep); }
+
+/* ---------- 生徒: 回答ボタン ---------- */
+.opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+@media (max-width: 480px) { .opt-grid { grid-template-columns: 1fr; } }
+.opt-btn {
+  border: 2.5px solid var(--line);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s, border-color 0.12s;
+  color: var(--ink);
+}
+.opt-btn:hover { transform: translateY(-2px); }
+.opt-btn .key {
+  flex: none;
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 15px;
+}
+.opt-btn.mine { border-color: var(--ink); background: #f2fbfc; }
+.opt-btn.right { border-color: var(--ba-deep); background: var(--ba-pale); }
+.opt-btn.wrong-mine { border-color: var(--sr); background: var(--sr-pale); }
+
+.scale-row { display: flex; gap: 10px; justify-content: center; margin: 18px 0; flex-wrap: wrap; }
+.scale-btn {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid var(--line);
+  background: var(--card);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.scale-btn.mine { border-color: var(--na-deep); background: var(--na-pale); }
+.scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); }
+
+/* ---------- 集計バー ---------- */
+.bars { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.bar-row { display: grid; grid-template-columns: minmax(60px, 1fr) 3fr 52px; gap: 10px; align-items: center; }
+.bar-label { font-size: 13.5px; font-weight: 700; text-align: right; word-break: break-word; }
+.bar-track { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; height: 26px; overflow: hidden; }
+.bar-fill {
+  height: 100%;
+  border-radius: 7px;
+  background: var(--bar-c, var(--cu));
+  min-width: 2px;
+  transition: width 0.4s ease;
+}
+.bar-count { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); }
+.bar-row.correct .bar-label { color: var(--ba-deep); }
+.bar-row.correct .bar-label::after { content: " ✓"; }
+
+/* ---------- テキスト回答の壁 ---------- */
+.text-wall { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.text-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-left: 5px solid var(--na);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14.5px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.text-card .who { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); flex: none; }
+.text-card.hidden-card { opacity: 0.35; }
+.text-card .hide-btn { margin-left: auto; flex: none; }
+
+/* ---------- 数値回答の一覧 ---------- */
+.num-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.num-chip {
+  font-family: var(--font-mono);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 13.5px;
+  background: var(--card);
+}
+.num-chip.right { border-color: var(--ba-deep); background: var(--ba-pale); color: var(--ba-deep); font-weight: 700; }
+.num-chip.wrong { border-color: var(--sr); background: var(--sr-pale); color: var(--sr-deep); }
+
+/* ---------- 生徒画面: 大きな状態表示 ---------- */
+.stage {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+.stage-msg { text-align: center; padding: 60px 10px; }
+.stage-msg .big { font-size: 52px; }
+.stage-msg h2 { font-family: var(--font-display); font-weight: 800; margin: 12px 0 6px; }
+.stage-msg p { color: var(--ink-soft); margin: 0; }
+
+.q-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-top: 6px solid var(--k);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 16px 0;
+  box-shadow: var(--shadow);
+}
+.q-no { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); }
+.q-text { font-size: 18px; font-weight: 700; margin: 6px 0 0; white-space: pre-wrap; }
+
+.answered-note {
+  text-align: center;
+  color: var(--ba-deep);
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+/* ---------- 教員ランナー ---------- */
+.run-controls {
+  position: sticky;
+  bottom: 0;
+  background: rgba(242, 249, 250, 0.95);
+  backdrop-filter: blur(4px);
+  border-top: 1.5px solid var(--line);
+  padding: 12px 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 40;
+}
+
+/* デッキ編集: 問題行 */
+.item-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.item-card .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.item-card .type-tag {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--k-pale);
+  color: var(--k-deep);
+  border-radius: 6px;
+  padding: 3px 8px;
+}

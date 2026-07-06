@@ -3,7 +3,7 @@
    ========================================================= */
 const CONFIG = {
   // GASウェブアプリのURL (デプロイ後に貼り付け。末尾は /exec)
-  GAS_URL: "https://script.google.com/macros/s/AKfycbx69WVzyPuTnLLd0Ye7dpGWCDgUqWHyidIiENzxYlCJwwxoWfEtYyUUiLdEDlxonLZO/exec",
+  GAS_URL: "ここにGASのウェブアプリURLを貼る",
 
   // portal.json が読めない時のフォールバック表示名
   SITE_TITLE: "Chem Portal",
