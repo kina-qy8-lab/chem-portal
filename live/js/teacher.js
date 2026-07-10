@@ -71,6 +71,13 @@
       $app.innerHTML = '<div class="empty"><div class="big">📡</div><p>' + UI.esc(msg) + "</p></div>";
       return;
     }
+    // 授業編集ページからの直リンク: #edit/{deckId} / #start/{deckId}
+    const m = location.hash.match(/^#(edit|start)\/(.+)$/);
+    if (m) {
+      history.replaceState(null, "", location.pathname + location.search);
+      if (m[1] === "edit") return openDeck(decodeURIComponent(m[2]));
+      if (m[1] === "start") return startSession(decodeURIComponent(m[2]));
+    }
     renderHome();
   }
 
@@ -384,7 +391,7 @@
   /* ================= ランナー (進行画面) ================= */
   function attachRunner(sid, code, deck) {
     T.run = { sid, code, deck, state: { index: -1, phase: "lobby" }, presenceN: 0,
-              answers: {}, subs: [], ansRef: null, hiddenText: new Set() };
+              answers: {}, subs: [], ansRef: null, hiddenText: new Set(), showLive: false };
     const r = T.run;
 
     const sub = (ref, cb) => { ref.on("value", cb); r.subs.push([ref, cb]); };
@@ -413,6 +420,7 @@
     if (r.ansRef && r.ansIdx === idx) return; // すでに購読中
     if (r.ansRef) r.ansRef.off();
     r.ansIdx = idx;
+    r.showLive = false; // 問題が変わったら回答表示をリセット
     r.ansRef = T.db.ref("sessions/" + r.sid + "/answers/" + idx);
     r.ansRef.on("value", (s) => {
       const list = [];
@@ -528,6 +536,17 @@
     const revealed = r.state.phase === "reveal";
     let h = "";
 
+    // 答えのある問題は、回答受付中は集計を隠す (教員画面=スクリーンに投影される前提)
+    const graded = (it.type === "choice" && it.correct != null) || (it.type === "numeric" && !!it.correct);
+    if (graded && r.state.phase === "q" && !r.showLive) {
+      zone.innerHTML =
+        '<p style="color:var(--ink-soft);font-size:14px;margin:14px 0 10px">🙈 答えのある問題なので、受付中は回答を隠しています ' +
+        '<span class="pill ok">回答 ' + list.length + "人</span></p>" +
+        '<button class="btn btn-ghost" id="peekBtn" style="padding:8px 16px;font-size:13.5px">回答状況をこの画面に表示する</button>';
+      zone.querySelector("#peekBtn").addEventListener("click", () => { r.showLive = true; renderResults(); });
+      return;
+    }
+
     if (it.type === "choice") {
       const counts = it.options.map(() => 0);
       list.forEach(a => { if (typeof a.v === "number" && counts[a.v] != null) counts[a.v]++; });
@@ -566,19 +585,24 @@
       h += "</div>";
       if (!list.length) h += '<p style="color:var(--ink-soft);font-size:13.5px">回答を待っています…</p>';
     } else if (it.type === "numeric") {
-      const hasC = !!it.correct;
+      const showAns = !!it.correct && revealed; // 正解値と正誤は答え合わせまで表示しない
       let okN = 0;
       h += '<div class="num-list">';
       list.forEach((a) => {
-        const ok = hasC && Live.numericMatch(a.v, it.correct, it.tol);
+        const ok = showAns && Live.numericMatch(a.v, it.correct, it.tol);
         if (ok) okN++;
-        h += '<span class="num-chip' + (hasC ? (ok ? " right" : " wrong") : "") + '" title="' + UI.esc(a.name || "") + '">' +
+        h += '<span class="num-chip' + (showAns ? (ok ? " right" : " wrong") : "") + '" title="' + UI.esc(a.name || "") + '">' +
              UI.esc(String(a.v)) + "</span>";
       });
       h += "</div>";
-      if (hasC) h += '<p style="color:var(--ink-soft);font-size:13.5px">正解 ' + okN + " / " + list.length +
-                     '人 · 正解値 <b style="font-family:var(--font-mono)">' + UI.esc(it.correct) +
-                     (it.unit ? " " + UI.esc(it.unit) : "") + "</b> (±" + (it.tol || 1) + "%)</p>";
+      if (showAns) {
+        h += '<p style="color:var(--ink-soft);font-size:13.5px">正解 ' + okN + " / " + list.length +
+             '人 · 正解値 <b style="font-family:var(--font-mono)">' + UI.esc(it.correct) +
+             (it.unit ? " " + UI.esc(it.unit) : "") + "</b> (±" + (it.tol || 1) + "%)</p>";
+      } else {
+        h += '<p style="color:var(--ink-soft);font-size:13.5px">回答 ' + list.length +
+             "人 (正解値と正誤は「答えを見せる」で表示されます)</p>";
+      }
     }
     zone.innerHTML = h;
 
