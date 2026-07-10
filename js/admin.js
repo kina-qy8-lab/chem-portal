@@ -132,6 +132,7 @@
   }
 
   function bindBar() {
+    document.getElementById("btnLive").onclick = () => window.open("live/teacher.html", "_blank");
     document.getElementById("btnSave").onclick = () => { clearTimeout(S.saveTimer); save(); };
     document.getElementById("btnPreview").onclick = () => window.open(studentUrl(), "_blank");
     document.getElementById("btnShare").onclick = () => shareModal("生徒用ポータルのURL", studentUrl());
@@ -421,19 +422,39 @@
          '<div class="editor-grid">' +
          '<div class="field full"><label>授業タイトル</label><input type="text" id="edTitle" value="' + UI.esc(l.title) + '"></div>' +
          '<div class="field"><label>日付</label><input type="date" id="edDate" value="' + UI.esc(l.date || "") + '"></div>' +
-         '<div class="field"><label>&nbsp;</label><button class="btn btn-ghost" id="btnLessonShare" style="width:100%">' +
-         "この授業の生徒用URL / QR</button></div>" +
+         '<div class="field"><label>&nbsp;</label><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+         '<button class="btn btn-ghost" id="btnLessonShare" style="flex:1;min-width:150px;justify-content:center">生徒用URL / QR</button>' +
+         '<button class="btn btn-ghost" id="btnClassroom" style="flex:1;min-width:150px;justify-content:center">Classroomに投稿</button>' +
+         "</div></div>" +
          '<div class="field full"><label>説明 <span class="hint">生徒に表示されます</span></label>' +
          '<textarea id="edDesc">' + UI.esc(l.desc || "") + "</textarea></div>" +
          "</div></div>";
 
-    h += '<div class="panel"><h3>授業ツールへのリンク</h3>' +
+    h += '<div class="panel"><h3>⚡ ライブ授業</h3>' +
          '<div class="editor-grid">' +
-         '<div class="field"><label>ライブ授業 (インタラクティブスライド) のURL <span class="hint">空欄なら生徒に非表示</span></label>' +
-         '<input type="url" id="edLive" placeholder="https://…" value="' + UI.esc(l.live.url || "") + '"></div>' +
-         '<div class="field"><label>復習問題のURL <span class="hint">空欄なら生徒に非表示</span></label>' +
-         '<input type="url" id="edReview" placeholder="https://…" value="' + UI.esc(l.review.url || "") + '"></div>' +
-         "</div></div>";
+         '<div class="field"><label>問題デッキ</label><select id="edLiveDeck"><option>読み込み中…</option></select></div>' +
+         '<div class="field"><label>&nbsp;</label><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+         '<button class="btn btn-sub" id="btnDeckNew">＋ 作成</button>' +
+         '<button class="btn btn-sub" id="btnDeckEdit">✎ 編集</button>' +
+         '<button class="btn btn-live" id="btnDeckStart" style="padding:8px 16px;font-size:13.5px"><span class="dot"></span>開始</button>' +
+         "</div></div></div>" +
+         '<p style="font-size:12px;color:var(--ink-soft);margin:2px 0 0">デッキを選ぶと、生徒ページに「ライブ授業に参加」ボタンが自動で表示されます。</p></div>';
+
+    h += '<div class="panel"><h3>📚 復習問題</h3>' +
+         '<div class="editor-grid">' +
+         '<div class="field"><label>問題デッキ</label><select id="edReviewDeck"><option>読み込み中…</option></select></div>' +
+         '<div class="field"><label>&nbsp;</label><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+         '<button class="btn btn-sub" id="btnRDeckNew">＋ 作成</button>' +
+         '<button class="btn btn-sub" id="btnRDeckEdit">✎ 編集</button>' +
+         '<button class="btn btn-review" id="btnRPreview" style="padding:8px 16px;font-size:13.5px">プレビュー</button>' +
+         "</div></div></div>" +
+         '<p style="font-size:12px;color:var(--ink-soft);margin:2px 0 0">選ぶと「復習問題にちょうせん」ボタンが自動表示。取り組み結果は復習ログ(スプレッドシート)に記録されます。</p></div>';
+
+    h += '<details class="panel" style="padding:14px 20px"><summary style="cursor:pointer;font-weight:700;font-size:14px">手動URL設定 (ふだんは不要)</summary>' +
+         '<div class="editor-grid" style="margin-top:12px">' +
+         '<div class="field"><label>ライブ授業のURL</label><input type="url" id="edLive" placeholder="デッキ選択で自動設定" value="' + UI.esc(l.live.url || "") + '"></div>' +
+         '<div class="field"><label>復習問題のURL</label><input type="url" id="edReview" placeholder="デッキ選択で自動設定" value="' + UI.esc(l.review.url || "") + '"></div>' +
+         "</div></details>";
 
     h += '<div class="panel"><h3>教材</h3><div class="row-list" id="matList"></div>' +
          '<button class="add-row" id="addMat" style="margin-bottom:4px">＋ 教材を追加</button></div>';
@@ -454,8 +475,113 @@
       shareModal("「" + l.title + "」の生徒用URL",
         studentUrl() + "#/" + s.id + "/" + u.id + "/" + l.id);
 
+    document.getElementById("btnClassroom").onclick = () => {
+      const url = studentUrl() + "#/" + s.id + "/" + u.id + "/" + l.id;
+      const share = "https://classroom.google.com/share?url=" + encodeURIComponent(url) +
+                    "&title=" + encodeURIComponent(l.title) +
+                    "&body=" + encodeURIComponent("授業ページはこちら。教材・ライブ参加・復習問題があります。");
+      window.open(share, "_blank", "width=680,height=640");
+    };
+
     document.getElementById("addMat").onclick = () => addMaterialModal(l);
     renderMatList(l);
+    setupDeckSelectors(l);
+  }
+
+  /* --- ライブ/復習デッキの選択UI --- */
+  let deckCache = null;
+  async function fetchDecks(force) {
+    if (deckCache && !force) return deckCache;
+    try {
+      const res = await adminPost("listDecks", {});
+      deckCache = res.ok ? (res.decks || []) : [];
+    } catch (e) { deckCache = deckCache || []; }
+    return deckCache;
+  }
+  function siteBase() { return studentUrl().replace(/index\.html$/, ""); }
+  function liveJoinUrl() { return siteBase() + "live/student.html"; }
+  function reviewJoinUrl(deckId) { return siteBase() + "review/index.html?d=" + encodeURIComponent(deckId); }
+  function teacherUrl(hash) { return "live/teacher.html" + (hash || ""); }
+
+  async function setupDeckSelectors(l) {
+    const liveSel = document.getElementById("edLiveDeck");
+    const revSel = document.getElementById("edReviewDeck");
+    if (!liveSel) return;
+    const decks = await fetchDecks(true);
+    const fill = (sel, cur) => {
+      let h = '<option value="">(なし)</option>';
+      decks.forEach((d) => {
+        h += '<option value="' + UI.esc(d.id) + '"' + (cur === d.id ? " selected" : "") + ">" +
+             UI.esc(d.title) + " (" + (d.count || 0) + "問)</option>";
+      });
+      sel.innerHTML = h;
+    };
+    fill(liveSel, l.live.deckId || "");
+    fill(revSel, l.review.deckId || "");
+    syncDeckUI(l);
+
+    liveSel.onchange = () => {
+      const v = liveSel.value;
+      if (v) { l.live.deckId = v; l.live.url = liveJoinUrl(); }
+      else { l.live.deckId = null; if ((l.live.url || "") === liveJoinUrl()) l.live.url = ""; }
+      markDirty(); syncDeckUI(l);
+    };
+    revSel.onchange = () => {
+      const v = revSel.value;
+      const wasAuto = (l.review.url || "").indexOf(siteBase() + "review/") === 0;
+      if (v) { l.review.deckId = v; l.review.url = reviewJoinUrl(v); }
+      else { l.review.deckId = null; if (wasAuto) l.review.url = ""; }
+      markDirty(); syncDeckUI(l);
+    };
+
+    document.getElementById("btnDeckNew").onclick = () => newDeckFlow(l, "live");
+    document.getElementById("btnRDeckNew").onclick = () => newDeckFlow(l, "review");
+    document.getElementById("btnDeckEdit").onclick = () =>
+      { if (l.live.deckId) window.open(teacherUrl("#edit/" + l.live.deckId), "_blank"); };
+    document.getElementById("btnRDeckEdit").onclick = () =>
+      { if (l.review.deckId) window.open(teacherUrl("#edit/" + l.review.deckId), "_blank"); };
+    document.getElementById("btnDeckStart").onclick = () =>
+      { if (l.live.deckId) window.open(teacherUrl("#start/" + l.live.deckId), "_blank"); };
+    document.getElementById("btnRPreview").onclick = () =>
+      { if (l.review.deckId) window.open(reviewJoinUrl(l.review.deckId), "_blank"); };
+  }
+
+  function syncDeckUI(l) {
+    const en = (id, on) => { const b = document.getElementById(id); if (b) b.disabled = !on; };
+    en("btnDeckEdit", !!l.live.deckId);
+    en("btnDeckStart", !!l.live.deckId);
+    en("btnRDeckEdit", !!l.review.deckId);
+    en("btnRPreview", !!l.review.deckId);
+    const li = document.getElementById("edLive"), ri = document.getElementById("edReview");
+    if (li) li.value = l.live.url || "";
+    if (ri) ri.value = l.review.url || "";
+  }
+
+  function newDeckFlow(l, kind) {
+    UI.modal({
+      title: kind === "live" ? "ライブ用デッキを作成" : "復習用デッキを作成",
+      bodyHTML: '<div class="field"><label>デッキ名</label><input type="text" id="ndName" value="' +
+        UI.esc(l.title + (kind === "review" ? " 復習" : "")) + '"></div>' +
+        '<p style="font-size:12.5px;color:var(--ink-soft)">作成するとこの授業に自動でひも付き、問題編集ページが別タブで開きます。</p>',
+      okText: "作成する",
+      onOk: async (root) => {
+        const name = root.querySelector("#ndName").value.trim();
+        if (!name) { UI.toast("デッキ名を入力してください", "err"); return false; }
+        const deck = { id: UI.newId("dk"), title: name, items: [], updatedAt: Date.now() };
+        try {
+          const res = await adminPost("saveDeck", { deck });
+          if (!res.ok) throw new Error(res.error);
+        } catch (e) {
+          if (e.message !== "AUTH") UI.toast("作成に失敗しました", "err");
+          return false;
+        }
+        if (kind === "live") { l.live.deckId = deck.id; l.live.url = liveJoinUrl(); }
+        else { l.review.deckId = deck.id; l.review.url = reviewJoinUrl(deck.id); }
+        markDirty();
+        setupDeckSelectors(l);
+        window.open(teacherUrl("#edit/" + deck.id), "_blank");
+      }
+    });
   }
 
   function renderMatList(l) {
